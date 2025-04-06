@@ -607,7 +607,10 @@ const isCheckoutFormValid = computed(() => {
     !session.checkoutInfo.address) {
     return false;
   }
-
+  const pregex=/^(\+\d{1,2}\s?)?1?\-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/gm
+  if(session.checkoutInfo.phone.match(pregex)==null){
+    return false
+  }
   // Card validation if payment method is card
   if (session.checkoutInfo.paymentMethod === 'card') {
     if (!session.checkoutInfo.cardNumber || !session.checkoutInfo.cardExpiry || !session.checkoutInfo.cardCvv) {
@@ -720,10 +723,10 @@ return m;
 const dCtime = (r) => {
   return ((r.distance - .25) + 1) * 20
 }
-const placeOrder = () => {
+const placeOrder = async () => {
   // In a real app, this would send the order to your backend
   // Generate a random order number
-  orderNumber.value = 'ORD-' + Math.floor(Math.random() * 10000);
+  orderNumber.value = 'ORD-' + (await (await fetch('/api/noc')).json()).noc;
 
   // Calculate estimated delivery time
   const now = new Date();
