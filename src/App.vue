@@ -13,7 +13,7 @@
           </div>
           <button @click="logout" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
         </div>
-        
+
       </div>
     </header>
 
@@ -23,20 +23,25 @@
       <div v-if="!session.isAuthenticated" class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 mt-16">
         <h2 class="text-2xl font-bold text-center mb-6">Welcome to Mange</h2>
         <p class="text-gray-600 text-center mb-8">Please sign in to continue</p>
-        <button @click="login"
+        <button @click="loginG"
           class="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
           <img class="w-5 h-5" src="@/assets/google.svg" alt="Google logo" />
           Sign in with Google
         </button>
-        <button @click="login"
+        <!--button @click="loginA"
           class="mt-2 w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-md px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50">
           <img class="w-5 h-5" src="@/assets/apple.svg" alt="Apple logo" />
           Sign in with Apple
-        </button>
+        </button-->
       </div>
 
       <!-- App content if authenticated -->
       <div v-else>
+        <div v-if="session.err" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+          <span class="block sm:inline"><strong class="font-bold">Mein Gott! </strong>Something seriously bad
+            happened.</span>
+          <span @click="logout" class="absolute top-0 bottom-0 right-0 px-4 py-3">Logout?</span>
+        </div>
         <!-- Home Page -->
         <div v-if="session.currentPage === 'home'">
           <!-- Search bar -->
@@ -145,7 +150,8 @@
                     {{ selectedRestaurant.address }}
                   </div>
                 </div>
-                <div v-if="dCtime(selectedRestaurant)" class="bg-rose-50 text-rose-700 px-3 py-1 rounded-full text-sm font-medium">
+                <div v-if="dCtime(selectedRestaurant)"
+                  class="bg-rose-50 text-rose-700 px-3 py-1 rounded-full text-sm font-medium">
                   {{ dCtime(selectedRestaurant) }} min
                 </div>
               </div>
@@ -228,22 +234,18 @@
 
                   <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
-                    <select
-                      v-model="session.checkoutInfo.address"
-                      class="w-full px-3 py-4 bg-white border border-gray-300 rounded-lg
+                    <select v-model="session.checkoutInfo.address" class="w-full px-3 py-4 bg-white border border-gray-300 rounded-lg
                          text-sm text-gray-900 
-                         focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
-                      placeholder="Pickup Location"
-                    >
+                         focus:ring-2 focus:ring-rose-500 focus:border-rose-500" placeholder="Pickup Location">
                       <option value="" disabled>Select pickup location</option>
                       <option value="Foyer">Foyer</option>
                       <option value="Courtyard">Courtyard</option>
                       <option value="Cafeteria">Cafeteria</option>
                     </select>
 
-                    
-                    
-                    
+
+
+
                   </div>
 
                   <div>
@@ -284,7 +286,7 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
                             placeholder="MM/YY" />
                         </div>
-                  <div>
+                        <div>
                           <label class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
                           <input v-model="session.checkoutInfo.cardCvv" type="text"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-rose-500"
@@ -446,7 +448,7 @@
         </svg>
         <span
           class="absolute -top-2 -right-2 bg-white text-rose-500 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">{{
-          cartItemCount }}</span>
+            cartItemCount }}</span>
       </button>
     </div>
 
@@ -513,11 +515,12 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 <script setup>
-import { session, loginUser, fetchData, doOrder } from './data.js'
-import { ref, computed, onMounted,watch } from 'vue';
+import { session, loginUserG, fetchData, doOrder, logoutUser } from './data.js'
+import { ref, computed, onMounted, watch } from 'vue';
 
 let restaurants = ref([]);
 let categories = ref([]);
@@ -528,16 +531,16 @@ const selectedCategory = ref(null);
 const selectedRestaurant = ref(null);
 const selectedMenuCategory = ref(null);
 const showCart = ref(false);
-if(sessionStorage.getItem('user')!=null){
+if (sessionStorage.getItem('user') != null) {
   session.user = JSON.parse(sessionStorage.getItem('user'))
   session.isAuthenticated = true
-  session.cart=JSON.parse(sessionStorage.getItem('cart'))
+  session.cart = JSON.parse(sessionStorage.getItem('cart'))
 }
-watch(session, async (newu)=>{
-  if(newu.isAuthenticated&&sessionStorage.getItem('user')!=newu.user){
-    sessionStorage.setItem('user',JSON.stringify(newu.user))
-    sessionStorage.setItem('cart',JSON.stringify(newu.cart))
-  }else if(!newu.isAuthenticated){
+watch(session, async (newu) => {
+  if (newu.isAuthenticated && sessionStorage.getItem('user') != newu.user) {
+    sessionStorage.setItem('user', JSON.stringify(newu.user))
+    sessionStorage.setItem('cart', JSON.stringify(newu.cart))
+  } else if (!newu.isAuthenticated) {
     sessionStorage.clear()
   }
 })
@@ -547,6 +550,7 @@ const orderNumber = ref('');
 const estimatedDeliveryTime = ref('');
 const orderItems = ref([]);
 // Computed properties
+
 const filteredRestaurants = computed(() => {
   let result = restaurants.value;
 
@@ -607,8 +611,8 @@ const isCheckoutFormValid = computed(() => {
     !session.checkoutInfo.address) {
     return false;
   }
-  const pregex=/^(\+\d{1,2}\s?)?1?\-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/gm
-  if(session.checkoutInfo.phone.match(pregex)==null){
+  const pregex = /^(\+\d{1,2}\s?)?1?\-?\.?\s?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/gm
+  if (session.checkoutInfo.phone.match(pregex) == null) {
     return false
   }
   // Card validation if payment method is card
@@ -622,11 +626,16 @@ const isCheckoutFormValid = computed(() => {
 });
 
 // Methods
-const login = async () => {
-  await loginUser(session);
+const loginG = async () => {
+  await loginUserG(session)
+  const t=await (await fetch('/api/timeout',{method:'POST',body: JSON.stringify({sid: session.user.sess}),headers: { "Content-Type": "application/json" }})).json();
+  setTimeout(logout,t.timeout-50)
 };
-
-const logout = () => {
+const loginA=async () => {
+  //await loginUserA(session);
+};
+const logout = async () => {
+  await logoutUser(session)
   session.isAuthenticated = false;
   session.user = null;
   session.cart = [];
@@ -659,7 +668,7 @@ const viewRestaurant = (restaurantId) => {
     selectedMenuCategory.value = restaurant.menuCategories[0].id;
   }
 };
-const endOrder=()=>{session.cart = [];goToHome()}
+const endOrder = () => { session.cart = []; goToHome() }
 const goToHome = () => {
   session.currentPage = 'home';
   searchQuery.value = '';
@@ -714,11 +723,11 @@ const goToCheckout = () => {
   showCart.value = false;
 };
 const calcTime = (cart) => {
-  let m=0;
+  let m = 0;
   cart.forEach(i => {
-    try { if (m < ((restaurants[i.restaurantId].distance - .25) + 1) * 20) m = ((restaurants[i.restaurantId].distance - .25) + 1) * 20}catch { if (m < 20) m = 20 }
+    try { if (m < ((restaurants[i.restaurantId].distance - .25) + 1) * 20) m = ((restaurants[i.restaurantId].distance - .25) + 1) * 20 } catch { if (m < 20) m = 20 }
   })
-return m;
+  return m;
 }
 const dCtime = (r) => {
   return ((r.distance - .25) + 1) * 20
@@ -738,7 +747,7 @@ const placeOrder = async () => {
 
   // Copy cart items to order items
   orderItems.value = [...session.cart];
-  const order = { 
+  const order = {
     id: orderNumber.value, time: estimatedDeliveryTime.value,
     items: orderItems.value.map(item => ({
       id: item.id,
@@ -748,9 +757,9 @@ const placeOrder = async () => {
       restaurantName: item.restaurantName,
       restaurantId: item.restaurantId,
     })),
-    time: now.toTimeString(),place: session.checkoutInfo.address,phone:session.checkoutInfo.phone, name: session.checkoutInfo.name, instructions: session.checkoutInfo.instructions 
+    time: now.toTimeString(), place: session.checkoutInfo.address, phone: session.checkoutInfo.phone, name: session.checkoutInfo.name, instructions: session.checkoutInfo.instructions
   }
-  doOrder(order);
+  doOrder(session,order);
   // Clear cart
   //session.cart = [];
 

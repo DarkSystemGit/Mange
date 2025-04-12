@@ -1,31 +1,41 @@
 {
+    "cOC": 1,
+    "admins":["106706247271108292892"],
     "users": {
         "106706247271108292892": {
-            "sessions": [
-                "orn2XHUwETCBcFn7A6638DWNegym3XdNsezZX5nyuaYVjPq7owfZdehfEZJLEd3PS6fS2vtnUk81X6m/djOFIkVTcVdhVXZKRTlmWU52UXhJc3NvVCtQLzVTNVBkdTlIQlgydGkxSVU4dDQ9",
-                "IVlo7B3VvTz80kTJ6tYenMMApnnTMssr8uKU5lzFoJA4DBhK/56kmOyeYrwQJdpUmxpNMKYnvrLebX6kivhYF3MxK01jMW1hUzlNTDFJS05TUG9jSjZ6WFJNbWlNTHdWRmthVVlweXJPUTA9",
-                "7GiXcPVfxKoJRJNi1P+iu2wSeo0hZsOEhTRFAkNdQLtRaTHEWWgRsyazoVusQVsMQDqA+v/Lw8QGY40SHRM9KWtLamFWWnVLb1AzeTN6Tk1zMXRRZE9pdUJrbzlYSEJHeW9ZMTQ1QUVsUzA9",
-                "tdaWMF79WWFnUTgkdxJbUJivAudmsLxeAMwa2TMHjmf3L0hatMmB0bsPtp6CDdR8XQGhQuo9cRQAsiyk9glJ4ytEcXUxazVNZ2ZzakIwMXlmdW5uUEZiRFdFT3F6MWFnT1VGU2lsUFMxR1k9"
-            ],
-            "auth": true
+            "sessions": [],
+            "orders": [],
+            "auth": false
         }
     },
-    "sessions": {
-        "orn2XHUwETCBcFn7A6638DWNegym3XdNsezZX5nyuaYVjPq7owfZdehfEZJLEd3PS6fS2vtnUk81X6m/djOFIkVTcVdhVXZKRTlmWU52UXhJc3NvVCtQLzVTNVBkdTlIQlgydGkxSVU4dDQ9": {
-            "user": "106706247271108292892",
-            "expires": 1743887225313
-        },
-        "IVlo7B3VvTz80kTJ6tYenMMApnnTMssr8uKU5lzFoJA4DBhK/56kmOyeYrwQJdpUmxpNMKYnvrLebX6kivhYF3MxK01jMW1hUzlNTDFJS05TUG9jSjZ6WFJNbWlNTHdWRmthVVlweXJPUTA9": {
-            "user": "106706247271108292892",
-            "expires": 1743887355450
-        },
-        "7GiXcPVfxKoJRJNi1P+iu2wSeo0hZsOEhTRFAkNdQLtRaTHEWWgRsyazoVusQVsMQDqA+v/Lw8QGY40SHRM9KWtLamFWWnVLb1AzeTN6Tk1zMXRRZE9pdUJrbzlYSEJHeW9ZMTQ1QUVsUzA9": {
-            "user": "106706247271108292892",
-            "expires": 1743894799095
-        },
-        "tdaWMF79WWFnUTgkdxJbUJivAudmsLxeAMwa2TMHjmf3L0hatMmB0bsPtp6CDdR8XQGhQuo9cRQAsiyk9glJ4ytEcXUxazVNZ2ZzakIwMXlmdW5uUEZiRFdFT3F6MWFnT1VGU2lsUFMxR1k9": {
-            "user": "106706247271108292892",
-            "expires": 1743895489422
+    "sessions": {},
+    "orders": {
+        "ORD-1": {
+            "id": "ORD-1",
+            "time": "21:23:27 GMT-0400 (Eastern Daylight Time)",
+            "items": [
+                {
+                    "id": 5,
+                    "name": "Margherita Pizza",
+                    "price": 12.99,
+                    "quantity": 3,
+                    "restaurantName": "Pizza Heaven",
+                    "restaurantId": 2
+                },
+                {
+                    "id": 13,
+                    "name": "Fettuccine Alfredo",
+                    "price": 13.99,
+                    "quantity": 2,
+                    "restaurantName": "Pasta Paradise",
+                    "restaurantId": 4
+                }
+            ],
+            "place": "Courtyard",
+            "phone": "9296657450",
+            "name": "DarkSystem Programmer",
+            "instructions": "Nope",
+            "user": "106706247271108292892"
         }
     },
     "categories": [
@@ -389,6 +399,5 @@
                 }
             ]
         }
-    ],
-    "cOC": 0
+    ]
 }

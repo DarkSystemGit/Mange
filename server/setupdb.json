@@ -2,6 +2,7 @@
     "cOC":0,
     "users":{},
     "sessions":{},
+    "orders":{},
     "categories": [
         {
             "id": 1,
