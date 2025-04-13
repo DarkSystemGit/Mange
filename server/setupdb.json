@@ -3,6 +3,7 @@
     "users":{},
     "sessions":{},
     "orders":{},
+    "drivers":{},
     "categories": [
         {
             "id": 1,
