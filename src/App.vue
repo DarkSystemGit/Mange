@@ -11,6 +11,7 @@
             <img :src="session.user.photoURL" alt="User profile" class="w-8 h-8 rounded-full" />
             <span class="text-sm font-medium">{{ session.user.displayName }}</span>
           </div>
+          <button @click="session.currentPage='admin'" class="text-sm text-gray-600 hover:text-gray-900">Dashboard</button>
           <button @click="logout" class="text-sm text-gray-600 hover:text-gray-900">Logout</button>
         </div>
 
@@ -363,7 +364,7 @@
             </div>
           </div>
         </div>
-
+        <div v-if="session.currentPage === 'admin'"></div>
         <!-- Order Confirmation Page -->
         <div v-if="session.currentPage === 'confirmation'" class="max-w-2xl mx-auto">
           <div class="bg-white rounded-lg shadow-md overflow-hidden p-6 text-center">

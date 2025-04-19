@@ -11,38 +11,45 @@ const app = expressWs(express()).app;
 const port = 3000;
 const signer = 'mdUrOYz19C9gIMtd0+V3TVl3m6Yz1eReXDbB5BkEhG2e5Kl0vmgnDu80FyNdStpjmk3rcp2Um1P9EM+nA8m253soke1gbcNSZzeSp+Ndj4aScQl8yK4W3ASF3kNRYYrOGl04n611VSCLh6d70SqVbJiUsQYFDzck3jl2Q+pfOWdxz2oU/oBJtTj0omp1GmExiBzdud7q+/V6oPyRxIc7liEiF70u/k+aqauhE56F5Whu10CBLKyXkPV6GCLx5kbCUVu0fH/yvuZwW4SJYzEqpN+0QMFvaW62J/OgxT/gV5mHNMR4U/cIC12Art9S0RRbqHdE+AVReGYvR1JKAeSmKTtqG7fCSvXskz6ZwOu8dtl7vGiREC/0klNq22L2io2aeKuWLptJXdZbCwAMM2oygK+m+exJs72yGZbzAtVLtWjcRaU0BtF9iyAp3Wu4yjSFLMGBfNl3BPs6/Asn9GWqk7NKPlgUPJ6XcqKTjTq7STi5vmVMqfQoGHEGVfcIz/Jk+ffvgbsmhAArf19JbBreiXPWh6pTw++/c4Hb+DjTqA3AMWWkgqwUD7FwWIqpYt82GnELe0mb4+Tp5IYqVvVSLkKB/zKXnOCL0Xg4/k9HlvKGXUa9dwjdYE+qC0a+HWH8DB6hnWnkbis7TGH6ynpYZ6OmXXwHr7vJK8UGJ/s3bGg=';
 const sesslen = 3;
-const dbfile= "main.db";
-const logfile= "server.log";
+const dbfile = "main.db";
+const logfile = "server.log";
 const subcost = 0;
-const iv = crypto.randomBytes(12).toString('base64');
 const db = new Database(dbfile, JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'setupdb.json'), 'utf8')));
-let adminSign; 
+let adminSign = crypto.randomBytes(32).toString('base64');
+let senders = [];
+setInterval(() => {
+    const a = adminData(db);
+    senders.forEach((s) => {
+        s.send(JSON.stringify(encryptSymmetric(adminSign, JSON.stringify({ type: 'adminData', data: a }))));
+    });
+}, 1000)
 const encryptSymmetric = (key, plaintext) => {
+    const iv = crypto.randomBytes(12).toString('base64');
     const cipher = crypto.createCipheriv(
-      "aes-256-gcm", 
-      Buffer.from(key, 'base64'), 
-      Buffer.from(iv, 'base64')
+        "aes-256-gcm",
+        Buffer.from(key, 'base64'),
+        Buffer.from(iv, 'base64')
     );
     let ciphertext = cipher.update(plaintext, 'utf8', 'base64');
     ciphertext += cipher.final('base64');
     const tag = cipher.getAuthTag()
-    
-    return { ciphertext, tag }
-  }
-  const decryptSymmetric = (key, ciphertext, tag) => {
+
+    return { ciphertext, iv, tag }
+}
+const decryptSymmetric = (key, obj) => {
     const decipher = crypto.createDecipheriv(
-      "aes-256-gcm", 
-      Buffer.from(key, 'base64'),
-      Buffer.from(iv, 'base64')
+        "aes-256-gcm",
+        Buffer.from(key, 'base64'),
+        Buffer.from(obj.iv, 'base64')
     );
-    
-    decipher.setAuthTag(Buffer.from(tag, 'base64'));
-  
-    let plaintext = decipher.update(ciphertext, 'base64', 'utf8');
+
+    decipher.setAuthTag(Buffer.from(obj.tag, 'base64'));
+
+    let plaintext = decipher.update(obj.ciphertext, 'base64', 'utf8');
     plaintext += decipher.final('utf8');
-  
+
     return plaintext;
-  }
+}
 function genSessionId(k) {
     const sessionId = crypto.randomBytes(64);
     const hmac = crypto.createHmac('sha256', k);
@@ -57,10 +64,39 @@ function validateSess(s, k, db) {
     if (valid && !sess.morte && sess.expires > Date.now() && db.getEntry(`users.${sess.user}`).auth) {
         return sess;
     }
-    console.log("SESSION REJECTED:", valid, !sess.morte, sess.expires > Date.now(), db.getEntry(`users.${sess.user}`).auth)
+    log("SESSION REJECTED:", valid, !sess.morte, sess.expires > Date.now(), db.getEntry(`users.${sess.user}`).auth)
     return false;
 }
-const log=(msg)=>{
+const adminData = (db) => {
+    const bdata = {
+        restaurants: db.getEntry('restaurants').length,
+        drivers: Object.keys(db.getEntry('drivers')).length,
+        uc: Object.keys(db.getEntry('users')).length,
+        orders: Object.keys(db.getEntry('orders')).length,
+        revenue: Object.keys(db.getEntry('users')).length * subcost,
+        totalTransactionVal: Object.values(db.getEntry('orders')).reduce((a, b) => a + b.price, 0),
+        monthlyTransactionVal: Object.values(db.getEntry('lmoids')).map((i) => { db.getEntry(`orders.${i.id}`).price }).reduce((a, b) => a + b, 0),
+    };
+    let userInfo = {};
+    Object.keys(db.getEntry('users')).forEach((uid) => {
+        userInfo[db.getEntry(`users.${uid}.name`)] = {
+            orders: db.getEntry(`users.${uid}.orders`).length,
+            admin: db.getEntry(`users.${uid}.admin`),
+            transactionVolume: db.getEntry(`users.${uid}.orders`).map((i) => db.getEntry(`orders.${i}`).price).reduce((a, b) => a + b, 0),
+            spending: Object.values(db.getEntry('lmoids')).filter((i) => i.user == uid).map((i) => db.getEntry(`orders.${i.id}`).price).reduce((a, b) => a + b, 0),
+        }
+    })
+    let spenders = Object.keys(userInfo).map((i) => { s: userInfo[i].spending, i }).sort((a, b) => b.s - a.s).map((i) => i.i);
+    /*let driverInfo={};
+    Object.keys(db.getEntry('drivers')).forEach((uid) => {
+        driverInfo[db.getEntry(`drivers.${uid}.name`)] = {
+            orders: db.getEntry(`drivers.${uid}.orders`).length,
+            transactionVolume:db.getEntry(`drivers.${uid}.orders`).map((i)=>db.getEntry(`orders.${i}`).price).reduce((a,b)=>a+b,0)
+        }
+    })*/
+    return { userInfo, spenders, newUsers:db.getEntry('nuc').length, ...bdata };
+}
+const log = (msg) => {
     console.log(msg);
     fs.appendFileSync(logfile, `${ansiColors.unstyle(msg)}\n`, (err) => {
         if (err) {
@@ -68,7 +104,7 @@ const log=(msg)=>{
         }
     })
 }
-app.use((req, res, next) =>{
+app.use((req, res, next) => {
     const ua = userAgent.parse(req.headers['user-agent']);
     const logEntry = `${ansiColors.bold(new Date().toISOString())} - ${ansiColors.green(req.method)} ${req.url} ${ansiColors.yellowBright(req.ip.replace("::ffff:", ""))} ${ansiColors.cyan(`(${ua.name.replace(/(^|\s)[a-z]/gi, l => l.toUpperCase())} ${ua.version} ${ua.os})`)}`;
     log(logEntry);
@@ -96,31 +132,39 @@ app.post('/api/login', async (req, res) => {
     const userData = req.body;
     let auth = true;
     let name;
+    let profile;
     try {
-        name=await (await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?alt=json`, {
+        const req = (await (await fetch(`https://www.googleapis.com/oauth2/v3/userinfo?alt=json`, {
             headers: {
                 'Authorization': `Bearer ${userData.access_token}`
             }
-        })).json().name
+        })).json())
+        name=req.name
+        profile = req.picture;
     } catch (e) { auth = false }
     if (!auth) {
         res.json({ error: true });
         return;
     }
-    let user = { sessions: [], orders: [],admin:false,name }
-    if (Object.keys(db.getEntry('users')).includes(userData.sub)) user = db.getEntry(`users.${userData.sub}`);
+    let user = { sessions: [], orders: [], admin: false, name, profile }
+    if (Object.keys(db.getEntry('users')).includes(userData.sub)) { user = db.getEntry(`users.${userData.sub}`) } else {
+        let nuc=db.getEntry('nuc');
+        nuc.push(Date.now());
+        nuc=nuc.filter((i)=>i>Date.now()-(2.629746*10**9));
+        db.create('nuc',nuc)
+    };
     user.auth = auth;
     let sid = genSessionId(signer);
     user.sessions.push(sid);
-    if(db.getEntry('admins').includes(userData.sub)){user.admin=true;adminSign=genSessionId(signer);}
+    if (db.getEntry('admins').includes(userData.sub)) { user.admin = true; }
     db.create(`users.${userData.sub}`, user);
     db.create(`sessions.${sid}`, {
         user: userData.sub,
         expires: Date.now() + (3.6 * (10 ** 6) * sesslen),
         morte: false
     });
-    let resr={ sid, exp: db.getEntry(`sessions.${sid}.expires`) };
-    if(user.admin)resr.admin=adminSign;
+    let resr = { sid, exp: db.getEntry(`sessions.${sid}.expires`) };
+    if (user.admin) { resr.admin = adminSign; }
     res.json(resr);
 });
 app.post('/api/order', (req, res) => {
@@ -131,6 +175,14 @@ app.post('/api/order', (req, res) => {
     }
     const order = req.body.order;
     order.user = sess.user;
+    let u = db.getEntry(`users.${sess.user}`)
+    u.orders.push(order.id);
+    let lmoids = db.getEntry(`lmoids`)
+    lmoids.push({ id: order.id, time: Date.now(), user: sess.user });
+    lmoids.sort((a, b) => b.time - a.time);
+    lmoids=lmoids.filter((i) => i.time < Date.now() - (2.629746 * 10 ** 9))
+    db.create(`lmoids`, lmoids);
+    db.create(`users.${sess.user}`, u);
     db.create(`orders.${order.id}`, order);
     res.json({ error: false });
 })
@@ -151,51 +203,47 @@ app.post('/api/logout', (req, res) => {
         res.json({ error: true });
     }
 })
-app.ws("/api/admin",(ws,res)=>{
-    ws.on("message",(msg)=>{
-        msg=JSON.parse(msg);
-        if(!validateSess(msg.sess,signer,db)){ws.send(JSON.stringify({error:true}));return}
-        try{const body=JSON.parse(decryptSymmetric(adminSigner,msg.body,iv,msg.tag));}catch(e){ws.send(JSON.stringify({error:true}));return}
-        switch (body.type){
+app.ws("/api/admin", (ws, res) => {
+    senders.push(ws);
+    const encryptObj = (msg, obj) => {
+        return JSON.stringify(encryptSymmetric(adminSign, JSON.stringify({ type: "resp", id: msg.id, obj })));
+    }
+    ws.on("message", (msg) => {
+        msg = JSON.parse(msg);
+        if (!validateSess(msg.sess, signer, db)) { ws.send(JSON.stringify({ error: true })); return }
+        try { msg = JSON.parse(decryptSymmetric(adminSign, msg.body)); } catch (e) { ws.send(JSON.stringify({ error: true })); return }
+        switch (body.type) {
             case 'addRestuarnt':
                 db.create(`restaurants.${body.data.id}`, body.data);
-                ws.send(JSON.stringify({error:false}));
+                ws.send(encryptObj(msg, { error: false }));
                 break;
             case 'removeRestuarnt':
                 db.remove(`restaurants.${body.data.id}`);
-                ws.send(JSON.stringify({error:false}));
+                ws.send(encryptObj(msg, { error: false }));
                 break;
             case 'addCategory':
                 db.create(`categories.${body.data.id}`, body.data);
-                ws.send(JSON.stringify({error:false}));
+                ws.send(encryptObj(msg, { error: false }));
                 break;
             case 'removeCategory':
                 db.remove(`categories.${body.data.id}`);
-                ws.send(JSON.stringify({error:false}));
+                ws.send(encryptObj(msg, { error: false }));
                 break;
             case 'addAdmin':
-                let admins=db.getEntry('admins');
-                if(!admins.includes(body.data.id)){
+                let admins = db.getEntry('admins');
+                if (!admins.includes(body.data.id)) {
                     admins.push(body.data.id);
-                    db.create('admins',admins);
+                    db.create('admins', admins);
                 }
-                ws.send(JSON.stringify({error:false}));
+                ws.send(encryptObj(msg, { error: false }));
                 break;
             case 'dumpDB':
-                ws.send(JSON.stringify({error:false,db:db.db}));
+                ws.send(encryptObj(msg, { db: db.db, error: false }));
+                break;
         }
     })
-    let stats=JSON.stringify({
-        restaurants: db.getEntry('restaurants').length,
-        drivers: Object.keys(db.getEntry('drivers')).length,
-        uc: Object.keys(db.getEntry('users')).length,
-        orders: Object.keys(db.getEntry('orders')).length,
-        revenue: Object.keys(db.getEntry('users')).length*subcost,
-        totalTransactionVal: db.getEntry('orders').reduce((a,b)=>a+b.price,0),
-        users: Object.values(db.getEntry('users')).map((u)=>u.name)
-    })
-    const estats=encryptSymmetric(adminSign, stats);
-    ws.send(JSON.stringify({error:false,body:estats.ciphertext,tag:estats.tag}));
+
+
 })
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

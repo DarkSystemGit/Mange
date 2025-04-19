@@ -4,6 +4,9 @@
     "sessions":{},
     "orders":{},
     "drivers":{},
+    "admins":["106706247271108292892"],
+    "lmoids":[],
+    "nuc":[],
     "categories": [
         {
             "id": 1,

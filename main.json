@@ -1,43 +1,48 @@
 {
     "cOC": 1,
-    "admins":["106706247271108292892"],
     "users": {
         "106706247271108292892": {
-            "sessions": [],
+            "sessions": [
+                "VPQohUhTslP9XBJLb4RG+8LmTtcAHDqQmeelwivVfzuAOfJ+L8JTv7h48Ny5ZlBTuqNPUYdPB/rO1KgBKofbACs3ekNVQldtYTlwUTBlMnZVWFpqaks1STdqdG9MQjVQa21UaXFSNmtMNG89"
+            ],
             "orders": [],
-            "auth": false
+            "admin": true,
+            "name": "DarkSystem Programmer",
+            "auth": true
         }
     },
-    "sessions": {},
+    "sessions": {
+        "VPQohUhTslP9XBJLb4RG+8LmTtcAHDqQmeelwivVfzuAOfJ+L8JTv7h48Ny5ZlBTuqNPUYdPB/rO1KgBKofbACs3ekNVQldtYTlwUTBlMnZVWFpqaks1STdqdG9MQjVQa21UaXFSNmtMNG89": {
+            "user": "106706247271108292892",
+            "expires": 1744684325565,
+            "morte": false
+        }
+    },
     "orders": {
         "ORD-1": {
             "id": "ORD-1",
-            "time": "21:23:27 GMT-0400 (Eastern Daylight Time)",
+            "time": "19:57:09 GMT-0400 (Eastern Daylight Time)",
             "items": [
                 {
-                    "id": 5,
-                    "name": "Margherita Pizza",
-                    "price": 12.99,
-                    "quantity": 3,
-                    "restaurantName": "Pizza Heaven",
-                    "restaurantId": 2
-                },
-                {
-                    "id": 13,
-                    "name": "Fettuccine Alfredo",
-                    "price": 13.99,
-                    "quantity": 2,
-                    "restaurantName": "Pasta Paradise",
-                    "restaurantId": 4
+                    "id": 9,
+                    "name": "California Roll",
+                    "price": 7.99,
+                    "quantity": 4,
+                    "restaurantName": "Sushi Express",
+                    "restaurantId": 3
                 }
             ],
-            "place": "Courtyard",
-            "phone": "9296657450",
+            "place": "Foyer",
+            "phone": "9999999999",
             "name": "DarkSystem Programmer",
-            "instructions": "Nope",
+            "instructions": "",
             "user": "106706247271108292892"
         }
     },
+    "drivers": {},
+    "admins": [
+        "106706247271108292892"
+    ],
     "categories": [
         {
             "id": 1,
