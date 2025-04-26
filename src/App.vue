@@ -532,7 +532,7 @@ const selectedCategory = ref(null);
 const selectedRestaurant = ref(null);
 const selectedMenuCategory = ref(null);
 const showCart = ref(false);
-if (sessionStorage.getItem('user') != null) {
+/*if (sessionStorage.getItem('user') != null) {
   session.user = JSON.parse(sessionStorage.getItem('user'))
   session.isAuthenticated = true
   session.cart = JSON.parse(sessionStorage.getItem('cart'))
@@ -544,7 +544,7 @@ watch(session, async (newu) => {
   } else if (!newu.isAuthenticated) {
     sessionStorage.clear()
   }
-})
+})*/
 
 // Order confirmation state
 const orderNumber = ref('');
@@ -584,7 +584,11 @@ const filteredMenuItems = computed(() => {
 
   return items;
 });
-
+setInterval(()=>{
+  if (session.user != null) {
+    //console.log(session.user.adminQueue)
+  }
+}, 1000)
 const cartItemCount = computed(() => {
   return session.cart.reduce((total, item) => total + item.quantity, 0);
 });

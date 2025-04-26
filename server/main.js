@@ -13,16 +13,17 @@ const signer = 'mdUrOYz19C9gIMtd0+V3TVl3m6Yz1eReXDbB5BkEhG2e5Kl0vmgnDu80FyNdStpj
 const sesslen = 3;
 const dbfile = "main.db";
 const logfile = "server.log";
-const subcost = 0;
+const subcost = 5;
 const db = new Database(dbfile, JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'setupdb.json'), 'utf8')));
 let adminSign = crypto.randomBytes(32).toString('base64');
 let senders = [];
 setInterval(() => {
     const a = adminData(db);
+    log(`${ansiColors.bold(new Date().toISOString())} - ${ansiColors.green('WS: dashUpdate')} ${ansiColors.yellowBright(JSON.stringify(a))}`)
     senders.forEach((s) => {
         s.send(JSON.stringify(encryptSymmetric(adminSign, JSON.stringify({ type: 'adminData', data: a }))));
     });
-}, 1000)
+}, 10000)
 const encryptSymmetric = (key, plaintext) => {
     const iv = crypto.randomBytes(12).toString('base64');
     const cipher = crypto.createCipheriv(
@@ -69,24 +70,27 @@ function validateSess(s, k, db) {
 }
 const adminData = (db) => {
     const bdata = {
-        restaurants: db.getEntry('restaurants').length,
-        drivers: Object.keys(db.getEntry('drivers')).length,
-        uc: Object.keys(db.getEntry('users')).length,
+        restaurantCount: db.getEntry('restaurants').length,
+        driverCount: Object.keys(db.getEntry('drivers')).length,
+        userCount: Object.keys(db.getEntry('users')).length,
         orders: Object.keys(db.getEntry('orders')).length,
         revenue: Object.keys(db.getEntry('users')).length * subcost,
-        totalTransactionVal: Object.values(db.getEntry('orders')).reduce((a, b) => a + b.price, 0),
-        monthlyTransactionVal: Object.values(db.getEntry('lmoids')).map((i) => { db.getEntry(`orders.${i.id}`).price }).reduce((a, b) => a + b, 0),
+        totalTransactionVal: Object.values(db.getEntry('orders')).map((i) => i.items.reduce((a, b) => a + b.price, 0)).reduce((a, b) => a + b, 0),
+        monthlyTransactionVal: db.getEntry('lmoids').map(i => db.getEntry('orders')[i.id].items.reduce((a, b) => a + b.price, 0)).reduce((a, b) => a + b, 0),
+        dailySpending:db.getEntry('lmoids').map(i => { return { v: db.getEntry('orders')[i.id].items.reduce((a, b) => a + b.price, 0), d: db.getEntry('orders')[i.id].time } }).sort((a, b) => b.d - a.d).map(i => i.v)
     };
     let userInfo = {};
     Object.keys(db.getEntry('users')).forEach((uid) => {
         userInfo[db.getEntry(`users.${uid}.name`)] = {
+            uid,
+            profile: db.getEntry(`users.${uid}.profile`),
             orders: db.getEntry(`users.${uid}.orders`).length,
             admin: db.getEntry(`users.${uid}.admin`),
-            transactionVolume: db.getEntry(`users.${uid}.orders`).map((i) => db.getEntry(`orders.${i}`).price).reduce((a, b) => a + b, 0),
-            spending: Object.values(db.getEntry('lmoids')).filter((i) => i.user == uid).map((i) => db.getEntry(`orders.${i.id}`).price).reduce((a, b) => a + b, 0),
+            transactionVolume: db.getEntry(`users.${uid}.orders`).map((i) => db.getEntry(`orders.${i}`).items.reduce((a, b) => a + b.price, 0)).reduce((a, b) => a + b, 0),
+            spending: Object.values(db.getEntry('lmoids')).filter((i) => i.user == uid).map((i) => db.getEntry(`orders.${i.id}`).items.reduce((a, b) => a + b.price, 0)).reduce((a, b) => a + b, 0),
         }
     })
-    let spenders = Object.keys(userInfo).map((i) => { s: userInfo[i].spending, i }).sort((a, b) => b.s - a.s).map((i) => i.i);
+    let spenders = Object.keys(userInfo).map((i) => { return { s: userInfo[i].spending, i } }).sort((a, b) => b.s - a.s).map((i) => i != undefined ? i.i : '');
     /*let driverInfo={};
     Object.keys(db.getEntry('drivers')).forEach((uid) => {
         driverInfo[db.getEntry(`drivers.${uid}.name`)] = {
@@ -94,7 +98,7 @@ const adminData = (db) => {
             transactionVolume:db.getEntry(`drivers.${uid}.orders`).map((i)=>db.getEntry(`orders.${i}`).price).reduce((a,b)=>a+b,0)
         }
     })*/
-    return { userInfo, spenders, newUsers:db.getEntry('nuc').length, ...bdata };
+    return { userInfo, spenders, newUsers: db.getEntry('nuc').length, ...bdata };
 }
 const log = (msg) => {
     console.log(msg);
@@ -139,7 +143,7 @@ app.post('/api/login', async (req, res) => {
                 'Authorization': `Bearer ${userData.access_token}`
             }
         })).json())
-        name=req.name
+        name = req.name
         profile = req.picture;
     } catch (e) { auth = false }
     if (!auth) {
@@ -148,10 +152,10 @@ app.post('/api/login', async (req, res) => {
     }
     let user = { sessions: [], orders: [], admin: false, name, profile }
     if (Object.keys(db.getEntry('users')).includes(userData.sub)) { user = db.getEntry(`users.${userData.sub}`) } else {
-        let nuc=db.getEntry('nuc');
+        let nuc = db.getEntry('nuc');
         nuc.push(Date.now());
-        nuc=nuc.filter((i)=>i>Date.now()-(2.629746*10**9));
-        db.create('nuc',nuc)
+        nuc = nuc.filter((i) => i > Date.now() - (2.629746 * 10 ** 9));
+        db.create('nuc', nuc)
     };
     user.auth = auth;
     let sid = genSessionId(signer);
@@ -180,7 +184,7 @@ app.post('/api/order', (req, res) => {
     let lmoids = db.getEntry(`lmoids`)
     lmoids.push({ id: order.id, time: Date.now(), user: sess.user });
     lmoids.sort((a, b) => b.time - a.time);
-    lmoids=lmoids.filter((i) => i.time < Date.now() - (2.629746 * 10 ** 9))
+    lmoids = lmoids.filter((i) => i.time > Date.now() - (2.629746 * 10 ** 9))
     db.create(`lmoids`, lmoids);
     db.create(`users.${sess.user}`, u);
     db.create(`orders.${order.id}`, order);
@@ -212,7 +216,9 @@ app.ws("/api/admin", (ws, res) => {
         msg = JSON.parse(msg);
         if (!validateSess(msg.sess, signer, db)) { ws.send(JSON.stringify({ error: true })); return }
         try { msg = JSON.parse(decryptSymmetric(adminSign, msg.body)); } catch (e) { ws.send(JSON.stringify({ error: true })); return }
-        switch (body.type) {
+        const logEntry = `${ansiColors.bold(new Date().toISOString())} - ${ansiColors.green('WS: '+msg.type)} ${ansiColors.yellowBright(msg.data)}`;
+        log(logEntry)
+        switch (msg.type) {
             case 'addRestuarnt':
                 db.create(`restaurants.${body.data.id}`, body.data);
                 ws.send(encryptObj(msg, { error: false }));

@@ -29,7 +29,6 @@ export const decrypt = (key, obj) => {
 }
 export async function adminDecode(session, socket, res) {
     socket.onmessage = async (m) => {
-      //console.log(session.user)
       let msg = JSON.parse(m.data);
       msg = JSON.parse(decrypt(session.user.adminSign, msg));
       if (res[msg.type] == undefined) {
@@ -40,6 +39,7 @@ export async function adminDecode(session, socket, res) {
         idrs[msg.id](msg);
         delete idrs[msg.id];
       }
+      console.log(res)
     }
   }
 export function sendAdmin(session, socket,type, data) {
