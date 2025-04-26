@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import { googleTokenLogin } from "vue3-google-login"
-import {adminDecode} from './comms.js'
+import {adminDecode, setAdminHandler} from './comms.js'
 // Page navigation state
 export const currentPage = ref('home'); // 'home', 'restaurant', 'checkout', 'confirmation'
 
@@ -64,8 +64,11 @@ export function loginUserG(session) {
       session.user.admin = true;
       session.user.adminSign = sess.admin;
       session.user.iv = sess.iv;
-      session.user.adminQueue = {};
-      adminDecode(session, new WebSocket(`ws://${window.location.host}/api/admin`),session.user.adminQueue)
+      session.user.adminData = {};
+      setAdminHandler("adminData", (msg) => {
+        session.user.adminData=msg.data
+      })
+      adminDecode(session, new WebSocket(`ws://${window.location.host}/api/admin`),{})
     }
     session.isAuthenticated = true;
     session.checkoutInfo.name = userData.name;

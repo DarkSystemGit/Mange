@@ -253,5 +253,5 @@ app.ws("/api/admin", (ws, res) => {
 
 })
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    log(`Server running at http://localhost:${port}`);
 });

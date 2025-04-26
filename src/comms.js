@@ -1,5 +1,9 @@
 import crypto from 'crypto';
 let idrs={}
+let ah={}
+export function setAdminHandler(type, handler) {
+    ah[type] = handler;
+}
 export const encrypt = (key, plaintext) => {
     const iv = crypto.randomBytes(12).toString('base64');
     const cipher = crypto.createCipheriv(
@@ -34,12 +38,13 @@ export async function adminDecode(session, socket, res) {
       if (res[msg.type] == undefined) {
         res[msg.type] = []
       }
-      res[msg.type].push(msg);
+      if(ah[msg.type] != undefined) {
+        ah[msg.type](msg);
+      }
       if(idrs[msg.id] != undefined) {
         idrs[msg.id](msg);
         delete idrs[msg.id];
       }
-      console.log(res)
     }
   }
 export function sendAdmin(session, socket,type, data) {

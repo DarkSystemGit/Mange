@@ -364,7 +364,113 @@
             </div>
           </div>
         </div>
-        <div v-if="session.currentPage === 'admin'"></div>
+        <div v-if="session.currentPage === 'admin'">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-6">Admin Dashboard</h2>
+          
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+              <div class="text-sm font-medium text-gray-500">Total Users</div>
+              <div class="text-2xl font-bold mt-2">{{ session.user.adminData.userCount }}</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <div class="text-sm font-medium text-gray-500">Total Orders</div>
+              <div class="text-2xl font-bold mt-2">{{ session.user.adminData.orders }}</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <div class="text-sm font-medium text-gray-500">Revenue</div>
+              <div class="text-2xl font-bold mt-2">${{ session.user.adminData.revenue.toFixed(2) }}</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+              <div class="text-sm font-medium text-gray-500">Transaction Volume</div>
+              <div class="text-2xl font-bold mt-2">${{ session.user.adminData.totalTransactionVal.toFixed(2) }}</div>
+            </div>
+          </div>
+
+          <!-- User Activity -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Top Spenders -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-lg font-semibold mb-4">Top Spenders</h3>
+              <div class="space-y-4">
+                <div v-for="spender in session.user.adminData.spenders" :key="spender" class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <img 
+                      :src="session.user.adminData.userInfo[spender].profile" 
+                      alt="User avatar" 
+                      class="w-10 h-10 rounded-full"
+                    />
+                    <div class="ml-3">
+                      <div class="font-medium">{{ spender }}</div>
+                      <div class="text-sm text-gray-500">{{ session.user.adminData.userInfo[spender].orders }} orders</div>
+                    </div>
+                  </div>
+                  <div class="font-medium">${{ session.user.adminData.userInfo[spender].spending.toFixed(2) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Daily Spending Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-lg font-semibold mb-4">Daily Spending</h3>
+              <div class="h-64 flex items-end justify-between gap-2">
+                <div v-for="(amount, index) in session.user.adminData.dailySpending" :key="index" 
+                     class="w-full bg-rose-500 rounded-t"
+                     :style="{ height: (amount / Math.max(...session.user.adminData.dailySpending) * 100) + '%' }">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Stats -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-lg font-semibold mb-4">System Status</h3>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Restaurants</span>
+                  <span class="font-medium">{{ session.user.adminData.restaurantCount }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Drivers</span>
+                  <span class="font-medium">{{ session.user.adminData.driverCount }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">New Users</span>
+                  <span class="font-medium">{{ session.user.adminData.newUsers }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-lg font-semibold mb-4">Transaction Volume</h3>
+              <div class="space-y-2">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Monthly</span>
+                  <span class="font-medium">${{ session.user.adminData.monthlyTransactionVal.toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Total</span>
+                  <span class="font-medium">${{ session.user.adminData.totalTransactionVal.toFixed(2) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+              <div class="space-y-2">
+                <button class="w-full px-4 py-2 bg-rose-500 text-white rounded hover:bg-rose-600">
+                  Manage Restaurants
+                </button>
+                <button class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                  View All Orders
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
         <!-- Order Confirmation Page -->
         <div v-if="session.currentPage === 'confirmation'" class="max-w-2xl mx-auto">
           <div class="bg-white rounded-lg shadow-md overflow-hidden p-6 text-center">
@@ -584,11 +690,6 @@ const filteredMenuItems = computed(() => {
 
   return items;
 });
-setInterval(()=>{
-  if (session.user != null) {
-    //console.log(session.user.adminQueue)
-  }
-}, 1000)
 const cartItemCount = computed(() => {
   return session.cart.reduce((total, item) => total + item.quantity, 0);
 });
