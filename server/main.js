@@ -7,9 +7,10 @@ import crypto from 'crypto';
 import ansiColors from 'ansi-colors';
 import userAgent from 'user-agent';
 import expressWs from 'express-ws';
+import 'dotenv/config'
 const app = expressWs(express()).app;
 const port = 3000;
-const signer = 'mdUrOYz19C9gIMtd0+V3TVl3m6Yz1eReXDbB5BkEhG2e5Kl0vmgnDu80FyNdStpjmk3rcp2Um1P9EM+nA8m253soke1gbcNSZzeSp+Ndj4aScQl8yK4W3ASF3kNRYYrOGl04n611VSCLh6d70SqVbJiUsQYFDzck3jl2Q+pfOWdxz2oU/oBJtTj0omp1GmExiBzdud7q+/V6oPyRxIc7liEiF70u/k+aqauhE56F5Whu10CBLKyXkPV6GCLx5kbCUVu0fH/yvuZwW4SJYzEqpN+0QMFvaW62J/OgxT/gV5mHNMR4U/cIC12Art9S0RRbqHdE+AVReGYvR1JKAeSmKTtqG7fCSvXskz6ZwOu8dtl7vGiREC/0klNq22L2io2aeKuWLptJXdZbCwAMM2oygK+m+exJs72yGZbzAtVLtWjcRaU0BtF9iyAp3Wu4yjSFLMGBfNl3BPs6/Asn9GWqk7NKPlgUPJ6XcqKTjTq7STi5vmVMqfQoGHEGVfcIz/Jk+ffvgbsmhAArf19JbBreiXPWh6pTw++/c4Hb+DjTqA3AMWWkgqwUD7FwWIqpYt82GnELe0mb4+Tp5IYqVvVSLkKB/zKXnOCL0Xg4/k9HlvKGXUa9dwjdYE+qC0a+HWH8DB6hnWnkbis7TGH6ynpYZ6OmXXwHr7vJK8UGJ/s3bGg=';
+const signer = process.env.SIGNER;
 const sesslen = 3;
 const dbfile = "main.db";
 const logfile = "server.log";
